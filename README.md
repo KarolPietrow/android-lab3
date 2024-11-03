@@ -1,4 +1,4 @@
-Stwórz aplikację, która będzie składała się z dwóch pól edycyjnych i 9 kafelków będących przyciskami. Ich funkcje:
+### Stwórz aplikację, która będzie składała się z dwóch pól edycyjnych i 9 kafelków będących przyciskami. Ich funkcje:
 
 1A. Aktywność A wysyła treść z drugiego pola edycyjnego pod numer telefonu zapisany w pierwszym (SMS)
 
