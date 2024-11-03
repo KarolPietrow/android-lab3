@@ -50,28 +50,24 @@ class MainActivity : ComponentActivity() {
                     )
                     TextField(
                         value = inputText1,
-                        onValueChange = {
-                            inputText1 = it
-                        },
+                        onValueChange = { inputText1 = it },
                         label = { Text("Pole wprowadzania 1") },
                         modifier = Modifier.fillMaxWidth()
                     )
                     TextField(
                         value = inputText2,
-                        onValueChange = {
-                            inputText2 = it
-                        },
+                        onValueChange = { inputText2 = it },
                         label = { Text("Pole wprowadzania 2") },
                         modifier = Modifier.fillMaxWidth()
                     )
 //                  Spacer(modifier = Modifier.height(50.dp))
-                    Button(onClick = {
+//                    Button(onClick = {
 //                  openSecondActivity(inputText)
-                    }, modifier = Modifier.fillMaxWidth()) {
-                        Text("Open Second Activity")
-                    }
+//                    }, modifier = Modifier.fillMaxWidth()) {
+//                        Text("Open Second Activity")
+//                    }
                     Button(onClick = {
-                        openMap(inputText1)
+                        sendSMS(inputText1, inputText2)
                     }, modifier = Modifier.fillMaxWidth()) {
                         Text("Aktywność 1A (Wyślij SMS)")
                     }
@@ -89,9 +85,13 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-//    private fun sendSMS(number:Int, message:String) {
-//        val intent
-//    }
+    private fun sendSMS(number:String, message:String) {
+        val intent = Intent(Intent.ACTION_SENDTO).apply {
+            data = Uri.parse("smsto:$number")
+            putExtra("sms_body", message)
+        }
+        startActivity(intent)
+    }
 
     private fun openMap(location: String) {
         val intent = Intent(Intent.ACTION_VIEW).apply {
