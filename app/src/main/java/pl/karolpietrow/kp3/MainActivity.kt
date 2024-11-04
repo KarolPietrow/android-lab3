@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -28,6 +30,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import pl.karolpietrow.kp3.ui.theme.KP3Theme
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import kotlin.system.exitProcess
 
 class MainActivity : ComponentActivity() {
@@ -37,10 +42,12 @@ class MainActivity : ComponentActivity() {
             KP3Theme {
                 var inputText1 by remember { mutableStateOf("") }
                 var inputText2 by remember { mutableStateOf("") }
+                val scrollState = rememberScrollState()
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(15.dp),
+                        .padding(15.dp)
+                        .verticalScroll(scrollState),
                     horizontalAlignment = Alignment.CenterHorizontally,
 //                    verticalArrangement = Arrangement.SpaceEvenly
                 ) {
@@ -65,7 +72,7 @@ class MainActivity : ComponentActivity() {
                             .fillMaxWidth()
                             .padding(10.dp)
                     )
-                  Spacer(modifier = Modifier.height(50.dp))
+                    Spacer(modifier = Modifier.height(50.dp))
                     Button(onClick = {
                         sendSMS(inputText1, inputText2)
                     }, modifier = Modifier.fillMaxWidth()) {
@@ -105,6 +112,22 @@ class MainActivity : ComponentActivity() {
                     )
                     Spacer(modifier = Modifier.height(15.dp))
                     Button(onClick = {
+                        callNumber(inputText2)
+                    }, modifier = Modifier.fillMaxWidth()) {
+                        Text("Aktywność 5A (Zadzwoń na numer)")
+                    }
+                    Text(
+                        text = "Pole 2 - numer telefonu",
+                        fontSize = 15.sp
+                    )
+                    Spacer(modifier = Modifier.height(15.dp))
+                    Button(onClick = {
+                        openMusic()
+                    }, modifier = Modifier.fillMaxWidth()) {
+                        Text("Aktywność 6A (Otwórz odtwarzacz muzyki)")
+                    }
+                    Spacer(modifier = Modifier.height(15.dp))
+                    Button(onClick = {
                         if (inputText1=="") {
                             inputText1="Nie podano tekstu dla linii 1"
                         }
@@ -115,6 +138,21 @@ class MainActivity : ComponentActivity() {
                     }, modifier = Modifier.fillMaxWidth()) {
                         Text("Aktywność 7A (Otwórz aktywność B)")
                     }
+                    Spacer(modifier = Modifier.height(15.dp))
+                    Button(onClick = {
+                        addCalendarEvent(inputText1, inputText2)
+                    }, modifier = Modifier.fillMaxWidth()) {
+                        Text("Aktywność 8A (Utwórz event w kalendarzu)")
+                    }
+                    Text(
+                        text = "Pole 1 - data+godz w formacie \"yyyy-MM-dd HH:mm\"",
+                        fontSize = 15.sp
+                    )
+                    Text(
+                        text = "Pole 2 - nazwa wydarzenia",
+                        fontSize = 15.sp
+                    )
+                    Spacer(modifier = Modifier.height(15.dp))
                     Button(onClick = {
                         exitProcess(0)
                     }, modifier = Modifier.fillMaxWidth()) {
@@ -188,6 +226,53 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun callNumber(number: String) {
+        val intent = Intent(Intent.ACTION_DIAL).apply {
+            data = Uri.parse("tel:$number")
+        }
+        if (intent.resolveActivity(packageManager) != null) {
+            startActivity(intent)
+        } else {
+            Toast.makeText(this, "Błąd: Brak aplikacji do dzwonienia!", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun openMusic() {
+        val intent = Intent(Intent.ACTION_MAIN).apply {
+            addCategory(Intent.CATEGORY_APP_MUSIC)
+        }
+        if (intent.resolveActivity(packageManager) != null) {
+            startActivity(intent)
+        } else {
+            Toast.makeText(this, "Błąd: Brak aplikacji do odtwarzania muzyki!", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun addCalendarEvent(dateString: String, name: String) {
+        if (dateString.isBlank()) {
+            Toast.makeText(this, "Błąd: Nie podano daty!", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+        try {
+            val localDateTime = LocalDateTime.parse(dateString, formatter)
+            val convertedDate = localDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+            val intent = Intent(Intent.ACTION_INSERT).apply {
+                data = Uri.parse("content://com.android.calendar/events")
+                putExtra("title", name)
+                putExtra("beginTime", convertedDate)
+            }
+            if (intent.resolveActivity(packageManager) != null) {
+                startActivity(intent)
+            } else {
+                Toast.makeText(this, "Błąd: Brak aplikacji kalendarza!", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: Exception) {
+            Toast.makeText(this, "Błąd: Niepoprawny format daty! Użyj 'yyyy-MM-dd HH:mm'", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun openSecondActivity(string1: String, string2: String) {
         val intent = Intent(this@MainActivity, SecondActivity::class.java).apply {
             putExtra("STRING_KEY_1", string1)
@@ -210,7 +295,7 @@ class SecondActivity : ComponentActivity() {
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
-                ) {
+            ) {
                 Text(
                     text = "Przekazane dane z aktywnośći A:",
                     fontSize = 25.sp,
